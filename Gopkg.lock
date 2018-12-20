@@ -325,7 +325,7 @@
   version = "v0.14.1"
 
 [[projects]]
-  digest = "1:5e2aa670145df9b863a9aa7a8467548e710de539f62219853cd840d6b5330007"
+  digest = "1:a1e219907bf66f813dc06793beae170cdc8268b517786ef19663e7c7fc7c5f8f"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -378,11 +378,11 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "9c236ffd6c56add84f3c17930ae75c26c68d61ec"
-  version = "v0.27.0"
+  revision = "0138530df202f5b8e8be1edb9c2f705e404a79cb"
+  version = "v0.27.3"
 
 [[projects]]
-  digest = "1:1fdfa9436cc1c11afbdbfb56549e9201a92db0b0a0b7bef0797e7b68c9e8791f"
+  digest = "1:b6621a5e9003d7d809993d49217a841d27ef85b4bc0459115d3fd1f8c1518999"
   name = "golang.org/x/crypto"
   packages = [
     "chacha20poly1305",
@@ -399,8 +399,7 @@
     "salsa20/salsa",
   ]
   pruneopts = "UT"
-  revision = "3764759f34a542a3aef74d6b02e35be7ab893bba"
-  source = "github.com/tendermint/crypto"
+  revision = "505ab145d0a99da450461ae2c1a9f6cd10d1f447"
 
 [[projects]]
   digest = "1:d36f55a999540d29b6ea3c2ea29d71c76b1d9853fdcd3e5c5cb4836f2ba118f1"
