@@ -18,6 +18,7 @@ var (
 	url                     string
 	validatorNetworkAddress string
 	ticker                  *time.Ticker
+	prometheusPort          int
 
 	// https://prometheus.io/docs/concepts/metric_types/
 	latestVotedBlock = prometheus.NewGauge(prometheus.GaugeOpts{
@@ -76,12 +77,15 @@ func readConfig() {
 	viper.AddConfigPath(".")
 	viper.SetConfigType("yaml")
 
+	viper.SetDefault("prometheusPort", 26661)
+
 	if err := viper.ReadInConfig(); err != nil {
 		panic(fmt.Errorf("fatal error config file: %s", err))
 	}
 
 	validatorNetworkAddress = viper.GetString("validatorNetworkAddress")
 	url = viper.GetString("url")
+	prometheusPort = viper.GetInt("prometheusPort")
 }
 
 func init() {
@@ -96,5 +100,7 @@ func main() {
 	go processBlocks(blocks)
 
 	http.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe("localhost:8080", nil)
+	listenURL := fmt.Sprintf("localhost:%v", prometheusPort)
+	fmt.Println("Serving Prometheus requests at", listenURL)
+	http.ListenAndServe(listenURL, nil)
 }
