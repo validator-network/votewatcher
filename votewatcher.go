@@ -15,10 +15,10 @@ import (
 )
 
 var (
-	url                     string
+	tendermintURL           string
 	validatorNetworkAddress string
 	ticker                  *time.Ticker
-	prometheusPort          int
+	prometheusURL           string
 
 	// https://prometheus.io/docs/concepts/metric_types/
 	latestVotedBlock = prometheus.NewGauge(prometheus.GaugeOpts{
@@ -28,7 +28,8 @@ var (
 )
 
 func startSubscription() (chan interface{}, context.CancelFunc) {
-	httpClient := client.NewHTTP(url, "/websocket") // TODO Make second parameter configurable with a default value
+	fmt.Println("Contacting Gaia at", tendermintURL)
+	httpClient := client.NewHTTP(tendermintURL, "/websocket") // TODO Make second parameter configurable with a default value
 	if err := httpClient.OnStart(); err != nil {
 		panic(err)
 	}
@@ -77,15 +78,15 @@ func readConfig() {
 	viper.AddConfigPath(".")
 	viper.SetConfigType("yaml")
 
-	viper.SetDefault("prometheusPort", 26661)
+	viper.SetDefault("prometheusURL", "[::]:26661")
 
 	if err := viper.ReadInConfig(); err != nil {
 		panic(fmt.Errorf("fatal error config file: %s", err))
 	}
 
 	validatorNetworkAddress = viper.GetString("validatorNetworkAddress")
-	url = viper.GetString("url")
-	prometheusPort = viper.GetInt("prometheusPort")
+	tendermintURL = viper.GetString("tendermintURL")
+	prometheusURL = viper.GetString("prometheusURL")
 }
 
 func init() {
@@ -100,7 +101,9 @@ func main() {
 	go processBlocks(blocks)
 
 	http.Handle("/metrics", promhttp.Handler())
-	listenURL := fmt.Sprintf("localhost:%v", prometheusPort)
-	fmt.Println("Serving Prometheus requests at", listenURL)
-	http.ListenAndServe(listenURL, nil)
+	fmt.Println("Serving Prometheus requests at", prometheusURL)
+	err := http.ListenAndServe(prometheusURL, nil)
+	if err != nil {
+		panic(err)
+	}
 }
