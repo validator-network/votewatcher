@@ -9,9 +9,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
-	"github.com/tendermint/tendermint/libs/pubsub/query"
 	"github.com/tendermint/tendermint/rpc/client"
 	"github.com/tendermint/tendermint/types"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 var (
@@ -27,31 +27,30 @@ var (
 	})
 )
 
-func startSubscription() (chan interface{}, context.CancelFunc) {
+func startSubscription() (<-chan ctypes.ResultEvent, context.CancelFunc) {
 	fmt.Println("Contacting Gaia at", tendermintURL)
 	httpClient := client.NewHTTP(tendermintURL, "/websocket") // TODO Make second parameter configurable with a default value
 	if err := httpClient.OnStart(); err != nil {
 		panic(err)
 	}
 
-	query := query.MustParse("tm.event = 'NewBlock'")
-
-	blocks := make(chan interface{}, 10)
-
 	ctx, cancel := context.WithCancel(context.Background())
-	if err := httpClient.Subscribe(ctx, "", query, blocks); err != nil {
+
+	eventChannel, err := httpClient.WSEvents.Subscribe(ctx, "", "tm.event = 'NewBlock'")
+
+	if err != nil {
 		fmt.Println("Unable to start subscription", err)
 		panic(err)
 	}
 
-	return blocks, cancel
+	return eventChannel, cancel
 }
 
-func processBlocks(blocks chan interface{}) {
-	for e := range blocks {
-		switch e.(type) {
+func processBlocks(events <-chan ctypes.ResultEvent) {
+	for e := range events {
+		switch e.Data.(type) {
 		case types.EventDataNewBlock:
-			block := e.(types.EventDataNewBlock).Block
+			block := e.Data.(types.EventDataNewBlock).Block
 			checkForVote(block)
 		default:
 			fmt.Printf("Unknown message received %T\n%v\n", e, e)
@@ -71,6 +70,8 @@ func checkForVote(block *types.Block) {
 			return
 		}
 	}
+
+	fmt.Println("Unable to find validator vote at height", block.Height)
 }
 
 func readConfig() {
